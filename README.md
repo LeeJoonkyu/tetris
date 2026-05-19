@@ -33,14 +33,36 @@ account-based score history, and a global top-score leaderboard.
 
 ## Run locally
 
-### Backend
+### Option A — Docker Compose (MySQL 8 + api in one shot, recommended)
+```
+cp .env.example .env       # optional; defaults work without it
+docker compose up -d --build
+```
+- `db` (MySQL 8.4, utf8mb4) and `api` (FastAPI on :8001) both start.
+- Persistent volume `mysql-data` survives `docker compose down`.
+- Host MySQL port is **3307** to avoid clashing with any local MySQL on 3306.
+- Stop / wipe:
+  ```
+  docker compose down            # stop, keep data
+  docker compose down -v         # stop + remove volume (fresh DB next time)
+  ```
+- Inspect raw rows directly:
+  ```
+  docker compose exec db mysql --default-character-set=utf8mb4 \
+    -utetris -ptetrispw tetris -e 'SELECT id, nickname, email FROM users;'
+  ```
+  (`--default-character-set=utf8mb4` is required so Hangul renders correctly
+  in the CLI; the API itself always returns UTF-8 JSON.)
+
+### Option B — Pure local Python (SQLite default)
 ```
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn backend.main:app --reload --port 8001
 ```
-Server: http://127.0.0.1:8001 (docs at `/docs`).
+Server: http://127.0.0.1:8001 (docs at `/docs`). Falls back to
+`sqlite:///./tetris.db` when `DATABASE_URL` is unset.
 
 ### Frontend
 ```

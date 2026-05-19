@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpw}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-tetris}
+      MYSQL_USER: ${MYSQL_USER:-tetris}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-tetrispw}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+        - -uroot
+        - -p${MYSQL_ROOT_PASSWORD:-rootpw}
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3307:3306"   # host:container — avoids clash with a host MySQL on 3306
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "mysql+pymysql://${MYSQL_USER:-tetris}:${MYSQL_PASSWORD:-tetrispw}@db:3306/${MYSQL_DATABASE:-tetris}?charset=utf8mb4"
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://127.0.0.1:8000}
+    ports:
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
