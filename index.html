@@ -259,6 +259,111 @@
       box-shadow: inset 1px 1px 0 #000;
     }
 
+    /* Account + leaderboard mini button */
+    .btn-mini {
+      display: block;
+      width: 100%;
+      padding: 5px 6px;
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--gb-3);
+      font-family: inherit;
+      font-size: 9px;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+    .btn-mini:hover { background: rgba(255,255,255,0.05); border-color: var(--ink); }
+    .btn-mini:active { background: rgba(255,255,255,0.1); }
+    .btn-mini.primary { border-color: var(--ink); }
+    .btn-mini[disabled] { opacity: 0.5; cursor: wait; }
+
+    .lcd-box.account { margin-top: auto; margin-bottom: 0; }
+    .lcd-box .small {
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--gb-2);
+      margin: 2px 0 6px 0;
+    }
+    .lcd-box .nick {
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: var(--ink);
+      margin: 2px 0 6px 0;
+    }
+    .lcd-box .top-val {
+      font-size: 16px;
+      letter-spacing: 2px;
+      color: var(--ink);
+      font-weight: bold;
+    }
+
+    /* Auth modal */
+    .auth-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      color: var(--ink);
+    }
+    .auth-modal.show { display: flex; }
+    .auth-card {
+      width: 320px;
+      background: var(--case);
+      border: 2px solid var(--ink);
+      padding: 20px;
+      box-shadow: 0 0 0 4px var(--case-d), 0 12px 32px rgba(0,0,0,0.6);
+    }
+    .auth-tabs { display: flex; gap: 0; margin-bottom: 16px; }
+    .auth-tab {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--gb-3);
+      color: var(--gb-3);
+      padding: 8px;
+      font-family: inherit;
+      font-size: 11px;
+      letter-spacing: 2px;
+      cursor: pointer;
+    }
+    .auth-tab.active {
+      color: var(--ink);
+      border-color: var(--ink);
+      background: rgba(255,255,255,0.05);
+    }
+    .auth-card label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--gb-3);
+      margin-bottom: 12px;
+    }
+    .auth-card input {
+      display: block;
+      width: 100%;
+      margin-top: 4px;
+      padding: 7px 8px;
+      background: var(--gb-0);
+      border: 1px solid var(--gb-3);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+    .auth-card input:focus { outline: none; border-color: var(--ink); }
+    .auth-error {
+      min-height: 16px;
+      font-size: 10px;
+      color: #ff6a6a;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      word-break: break-word;
+    }
+    .auth-actions { display: flex; gap: 8px; }
+
     /* Mobile / touch device notice */
     .mobile-only { display: none; }
     @media (max-width: 720px), (pointer: coarse) {
@@ -298,6 +403,31 @@
     <div class="title">DESKTOP ONLY</div>
     <div class="sub">KEYBOARD REQUIRED<br />PLEASE OPEN ON A DESKTOP BROWSER</div>
   </div>
+
+  <div class="auth-modal" id="authModal" role="dialog" aria-modal="true">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tabLogin">LOG IN</button>
+        <button type="button" class="auth-tab" id="tabRegister">SIGN UP</button>
+      </div>
+      <form id="authForm">
+        <label>EMAIL
+          <input type="email" id="authEmail" autocomplete="email" required />
+        </label>
+        <label>PASSWORD
+          <input type="password" id="authPassword" minlength="4" autocomplete="current-password" required />
+        </label>
+        <label id="nickField" style="display:none">NICKNAME (2-32, A-Z 0-9 _ -)
+          <input type="text" id="authNickname" minlength="2" maxlength="32" pattern="[A-Za-z0-9_\-]+" autocomplete="off" />
+        </label>
+        <div class="auth-error" id="authError"></div>
+        <div class="auth-actions">
+          <button type="button" class="btn-mini" id="btnCancelAuth">CANCEL</button>
+          <button type="submit" class="btn-mini primary" id="btnSubmitAuth">CONTINUE</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <div class="stage">
     <div class="gameboy">
       <div class="brand">
@@ -333,12 +463,29 @@
             <h2>LINES</h2>
             <div class="value" id="lines">0</div>
           </div>
+          <div class="lcd-box">
+            <h2>TOP SCORE</h2>
+            <div class="top-val" id="topScoreValue">--</div>
+            <div class="small" id="topScoreOwner"></div>
+          </div>
           <div class="controls">
             <div class="row"><span><b>&larr;&rarr;</b> MOVE</span></div>
             <div class="row"><span><b>&darr;</b> SOFT</span><span><b>&uarr;</b> ROT</span></div>
             <div class="row"><span><b>SPC</b> DROP</span></div>
             <div class="row"><span><b>P</b> PAUSE</span><span><b>R</b> RESET</span></div>
             <div class="row"><span><b>M</b> MUSIC</span></div>
+          </div>
+          <div class="lcd-box account">
+            <h2>ACCOUNT</h2>
+            <div id="loggedOutBox">
+              <div class="small">NOT SIGNED IN</div>
+              <button class="btn-mini" id="btnOpenLogin">LOG IN / SIGN UP</button>
+            </div>
+            <div id="loggedInBox" style="display:none">
+              <div class="small">SIGNED IN AS</div>
+              <div class="nick" id="myNickname">--</div>
+              <button class="btn-mini" id="btnLogout">LOG OUT</button>
+            </div>
           </div>
         </div>
       </div>
@@ -828,6 +975,12 @@
       overlay.classList.add('show');
       stopBGM();
       sfxGameOver();
+      // submit + refresh leaderboard (silent on error)
+      if (typeof submitScore === 'function') {
+        submitScore(score, lines, level).then(() => {
+          if (typeof refreshLeaderboard === 'function') refreshLeaderboard();
+        });
+      }
     }
     function showPause() {
       overlayTitle.textContent = 'PAUSED';
@@ -911,6 +1064,176 @@
 
     reset();
     requestAnimationFrame(loop);
+
+    /* ===================== Auth + Leaderboard ===================== */
+    const API_URL = (location.hostname === 'leejoonkyu.github.io')
+      ? 'https://tetris-api.onrender.com'
+      : 'http://127.0.0.1:8001';
+
+    const LS_TOKEN = 'tetris_token';
+    const LS_NICK  = 'tetris_nickname';
+
+    const authModal       = document.getElementById('authModal');
+    const authForm        = document.getElementById('authForm');
+    const authEmail       = document.getElementById('authEmail');
+    const authPassword    = document.getElementById('authPassword');
+    const authNickname    = document.getElementById('authNickname');
+    const nickField       = document.getElementById('nickField');
+    const authError       = document.getElementById('authError');
+    const tabLogin        = document.getElementById('tabLogin');
+    const tabRegister     = document.getElementById('tabRegister');
+    const btnCancelAuth   = document.getElementById('btnCancelAuth');
+    const btnSubmitAuth   = document.getElementById('btnSubmitAuth');
+    const btnOpenLogin    = document.getElementById('btnOpenLogin');
+    const btnLogout       = document.getElementById('btnLogout');
+    const loggedOutBox    = document.getElementById('loggedOutBox');
+    const loggedInBox     = document.getElementById('loggedInBox');
+    const myNicknameEl    = document.getElementById('myNickname');
+    const topScoreValueEl = document.getElementById('topScoreValue');
+    const topScoreOwnerEl = document.getElementById('topScoreOwner');
+
+    let authMode = 'login';
+
+    function getToken()    { return localStorage.getItem(LS_TOKEN); }
+    function getNickname() { return localStorage.getItem(LS_NICK); }
+    function setSession(token, nickname) {
+      localStorage.setItem(LS_TOKEN, token);
+      localStorage.setItem(LS_NICK,  nickname);
+      renderAccount();
+    }
+    function clearSession() {
+      localStorage.removeItem(LS_TOKEN);
+      localStorage.removeItem(LS_NICK);
+      renderAccount();
+    }
+    function renderAccount() {
+      const nick = getNickname();
+      if (nick && getToken()) {
+        loggedOutBox.style.display = 'none';
+        loggedInBox.style.display = 'block';
+        myNicknameEl.textContent = nick.toUpperCase();
+      } else {
+        loggedOutBox.style.display = 'block';
+        loggedInBox.style.display = 'none';
+      }
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+      authError.textContent = '';
+      if (mode === 'login') {
+        tabLogin.classList.add('active');
+        tabRegister.classList.remove('active');
+        nickField.style.display = 'none';
+        authNickname.required = false;
+      } else {
+        tabRegister.classList.add('active');
+        tabLogin.classList.remove('active');
+        nickField.style.display = 'block';
+        authNickname.required = true;
+      }
+    }
+    function openAuth(mode) {
+      setAuthMode(mode);
+      authForm.reset();
+      authError.textContent = '';
+      authModal.classList.add('show');
+      setTimeout(() => authEmail.focus(), 50);
+    }
+    function closeAuth() { authModal.classList.remove('show'); }
+
+    tabLogin.addEventListener('click', () => setAuthMode('login'));
+    tabRegister.addEventListener('click', () => setAuthMode('register'));
+    btnCancelAuth.addEventListener('click', closeAuth);
+    btnOpenLogin.addEventListener('click', () => openAuth('login'));
+    btnLogout.addEventListener('click', () => { clearSession(); refreshLeaderboard(); });
+    authModal.addEventListener('click', (e) => { if (e.target === authModal) closeAuth(); });
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authError.textContent = '';
+      btnSubmitAuth.disabled = true;
+      try {
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+        if (authMode === 'register') {
+          const nickname = authNickname.value.trim();
+          const r = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, nickname }),
+          });
+          if (!r.ok) {
+            const j = await r.json().catch(() => ({}));
+            throw new Error(j.detail || `REGISTER FAILED (${r.status})`);
+          }
+        }
+        const r2 = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        if (!r2.ok) {
+          const j = await r2.json().catch(() => ({}));
+          throw new Error(j.detail || `LOGIN FAILED (${r2.status})`);
+        }
+        const data = await r2.json();
+        setSession(data.access_token, data.nickname);
+        closeAuth();
+        refreshLeaderboard();
+      } catch (err) {
+        authError.textContent = String(err.message || err).toUpperCase().slice(0, 120);
+      } finally {
+        btnSubmitAuth.disabled = false;
+      }
+    });
+
+    async function refreshLeaderboard() {
+      try {
+        const r = await fetch(`${API_URL}/scores/top?limit=1`);
+        if (!r.ok) throw new Error('fetch failed');
+        const arr = await r.json();
+        if (arr.length) {
+          topScoreValueEl.textContent = arr[0].score;
+          topScoreOwnerEl.textContent = 'BY ' + String(arr[0].nickname).toUpperCase();
+        } else {
+          topScoreValueEl.textContent = '--';
+          topScoreOwnerEl.textContent = 'NO SCORES YET';
+        }
+      } catch (e) {
+        topScoreValueEl.textContent = '--';
+        topScoreOwnerEl.textContent = 'OFFLINE';
+      }
+    }
+
+    async function submitScore(s, l, lv) {
+      const token = getToken();
+      if (!token) return;
+      try {
+        await fetch(`${API_URL}/scores`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ score: s, lines: l, level: lv }),
+        });
+      } catch (e) {
+        console.warn('score submit failed', e);
+      }
+    }
+
+    (async function bootAuth() {
+      renderAccount();
+      refreshLeaderboard();
+      setInterval(refreshLeaderboard, 30000);
+      const token = getToken();
+      if (token) {
+        try {
+          const r = await fetch(`${API_URL}/auth/me`, {
+            headers: { 'Authorization': 'Bearer ' + token },
+          });
+          if (!r.ok) clearSession();
+        } catch (_) { /* offline: keep token */ }
+      }
+    })();
   </script>
 </body>
 </html>
