@@ -4,7 +4,7 @@ Browser Tetris with a Game Boy aesthetic, 8-bit chiptune BGM, line-clear firewor
 account-based score history, and a global top-score leaderboard.
 
 - **Live demo:** https://leejoonkyu.github.io/tetris/
-- **API:** https://tetris-api.onrender.com (Render Free — first request may take ~30s to wake)
+- **API:** https://tetris-api-3mk4.onrender.com (Render Free — first request may take ~30s to wake)
 - **Source:** https://github.com/LeeJoonkyu/tetris
 
 ## Tech
