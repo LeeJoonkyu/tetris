@@ -5,7 +5,8 @@ from pydantic import BaseModel, EmailStr, Field
 class RegisterIn(BaseModel):
     email: EmailStr
     password: str = Field(min_length=4, max_length=128)
-    nickname: str = Field(min_length=2, max_length=32, pattern=r"^[A-Za-z0-9_\-]+$")
+    # Allow Latin letters, digits, underscore, hyphen, and Hangul syllables (가-힣).
+    nickname: str = Field(min_length=2, max_length=32, pattern=r"^[A-Za-z0-9_\-가-힣]+$")
 
 
 class LoginIn(BaseModel):

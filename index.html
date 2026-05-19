@@ -296,6 +296,33 @@
       color: var(--ink);
       font-weight: bold;
     }
+    .rank-list { display: flex; flex-direction: column; gap: 4px; }
+    .rank-row {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    .rank-row .rank-pos { color: var(--gb-2); width: 14px; flex-shrink: 0; }
+    .rank-row .rank-nick {
+      color: var(--ink);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .rank-row .rank-score {
+      color: var(--ink);
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .rank-empty {
+      font-size: 10px;
+      color: var(--gb-2);
+      letter-spacing: 1px;
+    }
 
     /* Auth modal */
     .auth-modal {
@@ -417,8 +444,8 @@
         <label>PASSWORD
           <input type="password" id="authPassword" minlength="4" autocomplete="current-password" required />
         </label>
-        <label id="nickField" style="display:none">NICKNAME (2-32, A-Z 0-9 _ -)
-          <input type="text" id="authNickname" minlength="2" maxlength="32" pattern="[A-Za-z0-9_\-]+" autocomplete="off" />
+        <label id="nickField" style="display:none">NICKNAME (2-32, 한글/A-Z/0-9/_-)
+          <input type="text" id="authNickname" minlength="2" maxlength="32" pattern="[A-Za-z0-9_\-가-힣]+" autocomplete="off" />
         </label>
         <div class="auth-error" id="authError"></div>
         <div class="auth-actions">
@@ -464,9 +491,10 @@
             <div class="value" id="lines">0</div>
           </div>
           <div class="lcd-box">
-            <h2>TOP SCORE</h2>
-            <div class="top-val" id="topScoreValue">--</div>
-            <div class="small" id="topScoreOwner"></div>
+            <h2>RANKING</h2>
+            <div class="rank-list" id="rankList">
+              <div class="rank-empty">-- LOADING --</div>
+            </div>
           </div>
           <div class="controls">
             <div class="row"><span><b>&larr;&rarr;</b> MOVE</span></div>
@@ -1089,8 +1117,7 @@
     const loggedOutBox    = document.getElementById('loggedOutBox');
     const loggedInBox     = document.getElementById('loggedInBox');
     const myNicknameEl    = document.getElementById('myNickname');
-    const topScoreValueEl = document.getElementById('topScoreValue');
-    const topScoreOwnerEl = document.getElementById('topScoreOwner');
+    const rankListEl      = document.getElementById('rankList');
 
     let authMode = 'login';
 
@@ -1111,7 +1138,7 @@
       if (nick && getToken()) {
         loggedOutBox.style.display = 'none';
         loggedInBox.style.display = 'block';
-        myNicknameEl.textContent = nick.toUpperCase();
+        myNicknameEl.textContent = nick;
       } else {
         loggedOutBox.style.display = 'block';
         loggedInBox.style.display = 'none';
@@ -1188,21 +1215,30 @@
       }
     });
 
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => (
+        { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+      ));
+    }
+
     async function refreshLeaderboard() {
       try {
-        const r = await fetch(`${API_URL}/scores/top?limit=1`);
+        const r = await fetch(`${API_URL}/scores/top?limit=3`);
         if (!r.ok) throw new Error('fetch failed');
         const arr = await r.json();
-        if (arr.length) {
-          topScoreValueEl.textContent = arr[0].score;
-          topScoreOwnerEl.textContent = 'BY ' + String(arr[0].nickname).toUpperCase();
-        } else {
-          topScoreValueEl.textContent = '--';
-          topScoreOwnerEl.textContent = 'NO SCORES YET';
+        if (!arr.length) {
+          rankListEl.innerHTML = '<div class="rank-empty">NO SCORES YET</div>';
+          return;
         }
+        rankListEl.innerHTML = arr.map((row, i) => `
+          <div class="rank-row">
+            <span class="rank-pos">${i + 1}.</span>
+            <span class="rank-nick">${escapeHtml(row.nickname)}</span>
+            <span class="rank-score">${row.score}</span>
+          </div>
+        `).join('');
       } catch (e) {
-        topScoreValueEl.textContent = '--';
-        topScoreOwnerEl.textContent = 'OFFLINE';
+        rankListEl.innerHTML = '<div class="rank-empty">OFFLINE</div>';
       }
     }
 
