@@ -49,6 +49,16 @@ python3 -m http.server 8000
 Open http://127.0.0.1:8000/ — the frontend auto-detects the local API when not
 running on `leejoonkyu.github.io`.
 
+### Backend tests
+```
+source .venv/bin/activate
+pip install -r backend/requirements-dev.txt
+pytest backend/tests -v
+```
+26 tests cover auth (register/login/me + duplicate, invalid input, Hangul
+nicknames) and scores (submit, leaderboard ordering / per-user dedupe, /me
+isolation). Each test runs against an isolated temporary SQLite DB.
+
 ## API summary
 
 ```
